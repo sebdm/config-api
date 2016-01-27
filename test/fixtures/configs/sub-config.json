@@ -1,0 +1,20 @@
+{
+    "fullIdentifier": "top.sub",
+    "name": "Sub",
+    "settings": {
+        "currencyId": "SEK"
+    },
+    "components": {
+        "topComponentInstance": {
+            "type": "topComponent",
+            "version": 1.0,
+            "settings": {
+                "name": "Overridden name"
+            }
+        },
+        "subComponentInstance": {
+            "type": "subComponent",
+            "version": 1.0
+        }
+    }
+}

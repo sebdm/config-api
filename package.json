@@ -1,0 +1,28 @@
+{
+  "name": "config-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "bin": "./index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sebastian Lind <sebastian.lind@morningstar.com>",
+  "license": "ISC",
+  "dependencies": {
+    "async": "^1.5.1",
+    "bluebird": "^3.1.1",
+    "body-parser": "^1.14.2",
+    "express": "^4.13.3",
+    "jayschema": "^0.3.1",
+    "lodash": "^3.10.1",
+    "mongoose": "^4.3.4"
+  },
+  "devDependencies": {
+    "chai": "^3.4.1",
+    "chai-subset": "^1.2.0",
+    "mocha": "^2.3.4",
+    "mockgoose": "^5.1.0",
+    "supertest": "^1.1.0"
+  }
+}

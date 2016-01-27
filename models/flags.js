@@ -1,0 +1,1 @@
+module.exports = ['dev', 'qa', 'uat', 'prod'];

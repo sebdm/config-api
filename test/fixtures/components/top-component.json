@@ -1,0 +1,99 @@
+{
+    "type": "topComponent",
+    "version": 1,
+    "labels": {
+        "someLabel": {
+            "en": "Default (en) label"
+        }
+    },
+    "settings": {
+        "name": "Default name",
+        "someSetting": "hi"
+    },
+    "components": {
+        "someComponentInstance": {
+            "type": "someComponent",
+            "version": 1,
+            "settings": {
+                "name": "Overridden name"
+            }
+        }
+    },
+    "componentSchema": {
+        "id": "TopComponent.TopComponent",
+        "type": "object",
+        "properties": {
+            "type": {
+                "description": "Component type.\n",
+                "default": "topComponent",
+                "options": {
+                    "hidden": true
+                },
+                "type": "string",
+                "readonly": true,
+                "enum": [
+                    "topComponent"
+                ]
+            },
+            "version": {
+                "type": "number",
+                "default": 1,
+                "readonly": true,
+                "enum": [
+                    1
+                ]
+            },
+            "settings": {
+                "id": "TopComponent.Settings",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "someSetting": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                ],
+                "additionalProperties": false
+            },
+            "labels": {
+                "id": "TopComponent.Labels",
+                "type": "object",
+                "properties": {
+                    "someLabel": {
+                        "id": "AsterixCore.Label",
+                        "type": "object",
+                        "properties": {
+                            "en": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "en"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "someLabel"
+                ],
+                "additionalProperties": false
+            },
+            "components": {
+                "type": "object",
+                "properties": {
+                    "someComponentInstance": {
+                        "$ref": "configapi:component/someComponent/1/componentSchema"
+                    }
+                }
+            }
+        },
+        "required": [
+            "type",
+            "version"
+        ],
+        "additionalProperties": false
+    }
+}

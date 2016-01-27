@@ -1,0 +1,16 @@
+{
+    "fullIdentifier": "top",
+    "name": "Top",
+    "settings": {
+        "languageId": "sv-SE"
+    },
+    "components": {
+        "topComponentInstance": {
+            "type": "topComponent",
+            "version": 1.0,
+            "settings": {
+                "someSetting": "hello"
+            }
+        }
+    }
+}

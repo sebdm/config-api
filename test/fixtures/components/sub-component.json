@@ -1,0 +1,35 @@
+{
+    "type": "subComponent",
+    "version": 1,
+    "componentSchema": {
+        "id": "SubComponent.SubComponent",
+        "type": "object",
+        "properties": {
+            "type": {
+                "description": "Component type.\n",
+                "default": "subComponent",
+                "options": {
+                    "hidden": true
+                },
+                "type": "string",
+                "readonly": true,
+                "enum": [
+                    "subComponent"
+                ]
+            },
+            "version": {
+                "type": "number",
+                "default": 1,
+                "readonly": true,
+                "enum": [
+                    1
+                ]
+            }
+        },
+        "required": [
+            "type",
+            "version"
+        ],
+        "additionalProperties": false
+    }
+}

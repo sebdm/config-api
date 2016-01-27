@@ -1,0 +1,86 @@
+{
+    "type": "someComponentInvalidChild",
+    "version": 1,
+    "labels": {
+        "someLabel": {
+            "en": "Default (en) label"
+        }
+    },
+    "settings": {
+        "name": "Default name"
+    },
+    "components": {
+        "subComponentInstance": {
+            "type": "doesNotExist",
+            "version": 1
+        }
+    },
+    "componentSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "id": "SomeComponent.SomeComponent",
+        "type": "object",
+        "properties": {
+            "type": {
+                "description": "Component type.\n",
+                "default": "someComponentInvalidChild",
+                "options": {
+                    "hidden": true
+                },
+                "type": "string",
+                "readonly": true,
+                "id": "_Type",
+                "enum": [
+                    "someComponentInvalidChild"
+                ]
+            },
+            "settings": {
+                "id": "SomeComponent.Settings",
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                ],
+                "additionalProperties": false
+            },
+            "labels": {
+                "id": "SomeComponent.Labels",
+                "type": "object",
+                "properties": {
+                    "someLabel": {
+                        "id": "AsterixCore.Label",
+                        "type": "object",
+                        "properties": {
+                            "en": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "en"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "placeholder"
+                ],
+                "additionalProperties": false
+            },
+            "components": {
+                "type": "object",
+                "properties": {
+                    "subComponentInstance": {
+                        "$ref": "configapi:component/doesNotExist/1/componentSchema"
+                    }
+                }
+            }
+        },
+        "required": [
+            "type",
+            "version"
+        ],
+        "additionalProperties": false
+    }
+}

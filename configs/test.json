@@ -1,0 +1,6 @@
+{
+    "mongoUri": "mongodb://localhost/config-db-test",
+    "port": 3001,
+    "dev": true,
+    "import": false
+}
