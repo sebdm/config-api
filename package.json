@@ -13,8 +13,10 @@
     "async": "^1.5.1",
     "bluebird": "^3.1.1",
     "body-parser": "^1.14.2",
+    "deep-diff": "^0.3.3",
     "express": "^4.13.3",
     "jayschema": "^0.3.1",
+    "jsondiffpatch": "^0.1.38",
     "lodash": "^3.10.1",
     "mongoose": "^4.3.4"
   },

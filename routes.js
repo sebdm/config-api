@@ -9,10 +9,12 @@ module.exports = function(app) {
     app.put('/components/:type', components.update);
     app.delete('/components/:type/:version', components.delete);
 
-    app.get('/configs/all', configs.findAll);
+    //app.get('/configs/all', configs.findAll);
+    app.get('/configs/diff/:fullIdentifier/:revisionOld/:revisionNew', configs.diff);
     app.get('/configs/:fullIdentifier', configs.findByFullIdentifier);
     app.get('/configs/:fullIdentifier/:revision', configs.findByFullIdentifier);
     app.post('/configs', configs.add);
 
-    app.get('/instances/all', instances.findAll);
+    //app.get('/instances/all', instances.findAll);
+    app.get('/instances/:fullIdentifier', instances.findByFullIdentifier);
 };

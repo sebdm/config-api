@@ -1,0 +1,46 @@
+{
+    "dataSourceType": "parallel",
+    "fromTransform": "finalTransform", // fromMultipleSources({ xray { ds1, ds2, polling1 }, polling0 }, context)
+    "parallel": {
+        "xray": {
+            "dataSourceType": "sequence",
+            "sequence": {
+                "ds1": {
+                    "dataSourceType": "parallel",
+                    "parallel": {
+                        "ds10": {
+                            "dataSourceType": "selector",
+                            "fromTransform": "fromParent"
+                        },
+                        "ds11": {
+                            "dataSourceType": "api",
+                            "parameters": {
+                                "watchedPaths": "some.path",
+                                "toTransform": "toDs11" // toDs11(null, context)
+                            }
+                        }
+                    }
+                },
+                "ds2": {
+                    "dataSourceType": "api",
+                    "toTransform": "toDs2" // toDs2({ ds1 { ds10, ds11 } }, context)
+                },
+                "polling1": {
+                    // starts polling when the above chain completes -- if the chain is re-run, we want to "reset" the poll given the new waterfall result
+                    "dataSourceType": "poll",
+                    "url": "",
+                    "toTransform": "toPolling1" // toPolling1({ ds1, ds2 }, context)
+                }
+            }
+        },
+        "polling0": {
+            "dataSourceType": "poll",
+            "poll": {
+                "interval": 5000, // ms
+                "url": "",
+                "parameters": {
+                }
+            }
+        }
+    }
+}

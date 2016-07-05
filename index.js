@@ -34,6 +34,17 @@ function app(config) {
         console.log('Connected to Mongo server at %s', config.mongoUri);
     });
 
+    process.on('SIGINT', function() {
+        if (config.dev === true) {
+            mongoose.connection.db.dropDatabase();
+        }
+
+        mongoose.connection.close(function () {
+            console.log('Mongoose disconnected on app termination');
+            process.exit(0);
+        });
+    });
+
     app.use(bodyParser.urlencoded({extended: false}));
     app.use(bodyParser.json());
 

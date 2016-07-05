@@ -8,10 +8,10 @@ var _ = require('lodash');
 module.exports = function() {
     var subComponent, someComponent, topConfig, subConfig;
 
-    async.series([
+    async.waterfall([
         function(cb) {
             Component.create(
-                require('../fixtures/components/sub-component.json'),
+                _.merge({}, require('../fixtures/components/sub-component.json')),
                 function(err, c) {
                     if (err) {
                         cb(err);
@@ -25,7 +25,7 @@ module.exports = function() {
         },
         function(cb) {
             Component.create(
-                require('../fixtures/components/some-component.json'),
+                _.merge({}, require('../fixtures/components/some-component.json')),
                 function(err, c) {
                     if (err) {
                         cb(err);
@@ -38,7 +38,7 @@ module.exports = function() {
         },
         function(cb) {
             Component.create(
-                require('../fixtures/components/top-component.json'),
+                _.merge({}, require('../fixtures/components/top-component.json')),
                 function(err, c) {
                     if (err) {
                         cb(err);
@@ -50,7 +50,9 @@ module.exports = function() {
         },
         function(cb) {
             Config.create(
-                require('../fixtures/configs/top-config.json'),
+                _.merge({}, require('../fixtures/configs/top-config.json'), {
+                    flags: ['qa']
+                }),
                 function(err, c) {
                     if (err) {
                         cb(err);
@@ -82,6 +84,73 @@ module.exports = function() {
             Config.create(
                 _.merge({}, require('../fixtures/configs/sub-sub-config.json'), {
                     parent: subConfig._id
+                }),
+                function(err, c) {
+                    if (err) {
+                        cb(err);
+                        return console.log(err);
+                    }
+
+                    cb();
+                });
+        },
+        function(cb) {
+            Instance.create(
+                // deep merge here is important for mocha watch
+                _.merge({}, require('../fixtures/blueprints/some-component-blueprint.json')),
+                function(err, c) {
+                    if (err) {
+                        return cb(err);
+                    }
+
+                    cb(null, c);
+                });
+        },
+        function(blueprint, cb) {
+            Instance.create(
+                // deep merge here is important for mocha watch
+                _.merge({}, {
+                    type: 'someComponent',
+                    version: 1,
+                    blueprint: blueprint,
+                    fullIdentifier: 'inherits.someComponent.blueprint'
+                }),
+                function(err, c) {
+                    if (err) {
+                        return cb(err);
+                    }
+
+                    cb(null, blueprint);
+                });
+        },
+        function(blueprint, cb) {
+            Config.create(
+                _.merge({}, require('../fixtures/configs/top-config.json'), {
+                    settings: {
+                        languageId: 'en-GB'
+                    },
+                    components: {
+                        topComponentInstance: {
+                            settings: {
+                                someSetting: 'override!'
+                            }
+                        },
+                        someComponentThatInheritsFromBlueprint: {
+                            fullIdentifier: 'someComponentThatInheritsFromBlueprint',
+                            type: 'someComponent',
+                            version: 1,
+                            blueprint: blueprint,
+                            components: {
+                                subComponentInstance2: {
+                                    type: 'subComponent',
+                                    version: 1,
+                                    settings: {
+                                        instanceSetting: 2
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }),
                 function(err, c) {
                     if (err) {
@@ -154,7 +223,7 @@ module.exports = function() {
         //        });
         //    });
         //}
-    ], function(err, results) {
+    ], function(err, result) {
         if (err) {
             console.log(err);
         }

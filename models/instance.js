@@ -12,15 +12,20 @@ var InstanceSchema = new mongoose.Schema({
     component: {type: mongoose.Schema.Types.ObjectId, ref: 'Component', required: true},
     fullIdentifier: {type: String, required: true},
     revision: {type: Number, required: true},
+    blueprint: {type: mongoose.Schema.Types.ObjectId, ref: 'Instance'},
+    blueprintFullIdentifier: {type: String},
+    blueprintRevision: {type: Number},
     settings: {type: mongoose.Schema.Types.Mixed},
     labels: {type: mongoose.Schema.Types.Mixed},
     components: {type: mongoose.Schema.Types.Mixed},
     _componentReferenceIds: [{type: String}],
-    _componentReferences: [{type: mongoose.Schema.Types.ObjectId, ref: 'Instance'}]
+    _componentReferences: [{type: mongoose.Schema.Types.ObjectId, ref: 'Instance'}],
+    __sources: {type: mongoose.Schema.Types.Mixed}
 }, {});
 
 function autoPopulate(next) {
     this.populate({path: '_componentReferences', select: '-component -__v'});
+    this.populate({path: 'blueprint', select: '-__v'});
     next();
 };
 
@@ -33,6 +38,32 @@ function componentsFromDb(instance) {
 
     return instance;
 }
+
+InstanceSchema.methods.applyInheritance = function applyInheritance(copy, includeSources) {
+    var curr = this;
+    while (curr.blueprint) {
+        if (curr.blueprint.applyInheritance) {
+            curr.blueprint.applyInheritance(false, includeSources);
+        }
+
+        curr = curr.blueprint;
+    }
+
+    var origConfig = _.merge({}, this.toObject());
+    var blueprint = this.blueprint && this.blueprint.toObject ? this.blueprint.toObject() : {};
+    if (origConfig.blueprint) {
+        origConfig.blueprint = undefined;
+    }
+
+    if (blueprint.blueprint) {
+        blueprint.blueprint = undefined;
+    }
+
+    var result = _.merge(blueprint, origConfig, !includeSources ? function() {
+    } : require('./util/expandSourcesCustomizer'), {config: origConfig, parent: blueprint});
+    result = copy ? result : _.merge(this, result);
+    return result;
+};
 
 InstanceSchema
     .pre('find', autoPopulate)
@@ -54,7 +85,31 @@ InstanceSchema
 
         var instance = this;
         async.waterfall([
-            require('./util/detectDuplicateVersions.js')(instance),
+            function(cb) {
+                if (!instance.blueprint) {
+                    async.setImmediate(function() {
+                        return cb();
+                    });
+
+                    return;
+                }
+
+                // todo(slind): should we pass in blueprint's _id or fullid+rev?
+                mongoose.model('Instance').findOne({_id: instance.blueprint}).exec(function(err, blueprint) {
+                    if (err || !blueprint) {
+                        var err = new Error(['Couldn\'t find blueprint instance', instance.blueprint].join(', '));
+                        err.code = 400;
+                        return cb(err);
+                    }
+
+                    instance.blueprintFullIdentifier = blueprint.fullIdentifier;
+                    instance.blueprintRevision = blueprint.revision;
+                    instance.blueprint = blueprint;
+
+                    cb();
+                });
+            },
+            require('./util/detectDuplicateVersions.js')(instance.applyInheritance(true)),
             function(cb) {
                 Promise.all(createSubInstances(instance, instance.fullIdentifier)).then(function() {
                     cb();
@@ -113,8 +168,6 @@ InstanceSchema
                         cb(err);
                         return;
                     }
-
-                    //console.log(instance.fullIdentifier, instance.version, refComponent.componentSchema.properties)
 
                     instance.component = refComponent._id;
                     cb();

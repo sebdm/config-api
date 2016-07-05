@@ -7,13 +7,28 @@ var server = app.listen();
 var request = require('supertest').agent(server);
 var mongoose = require('mongoose');
 var _ = require('lodash');
+var async = require('async');
 
 describe('configs', function() {
 
     var subSubQaId;
+    var someComponentBlueprintId;
 
     before(function(done) {
-        require('./setup/importComponents')(done);
+        async.series([
+            require('./setup/importComponents'),
+            require('./setup/importBlueprints'),
+            function(cb) {
+                mongoose.model('Instance').findOne({fullIdentifier: 'blueprints.someComponent'}).exec(function(err, result) {
+                    if (err || !result) {
+                        return cb(err);
+                    }
+
+                    someComponentBlueprintId = result._id;
+                    cb();
+                })
+            }
+        ], done);
     });
 
     after(function() {
@@ -176,6 +191,34 @@ describe('configs', function() {
                         });
                 });
         });
+
+        it('successfully creates a new revision of a top config (that includes a component that references a blueprint)', function(done) {
+            request.post('/configs')
+                .send(_.merge({}, topConfigFixture, {
+                    components: {
+                        someComponentInheritingBlueprint: {
+                            type: 'someComponent',
+                            version: 1,
+                            blueprint: someComponentBlueprintId,
+                            components: {
+                                subComponentInstance2: {
+                                    type: 'subComponent',
+                                    version: 1,
+                                    settings: {
+                                        instanceSetting: 2
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }))
+                .end(function(err, res) {
+                    expect(res.status).to.equal(200);
+                    expect(res.body.revision).to.equal(4);
+                    expect(res.body.components.someComponentInheritingBlueprint.settings.name).to.equal('Name from blueprint');
+                    done();
+                });
+        });
     });
 
     describe('retrieve', function() {
@@ -218,7 +261,7 @@ describe('configs', function() {
             request.get('/configs/top/latest')
                 .expect(function(res) {
                     expect(res.status).to.equal(200);
-                    expect(res.body.revision).to.equal(3);
+                    expect(res.body.revision).to.equal(4);
                 })
                 .end(done);
         });
@@ -262,6 +305,8 @@ describe('configs', function() {
                     expect(res.body.__sources.parentRevision).to.not.be.ok;
                     expect(res.body.__sources.revision).to.not.be.ok;
                     expect(res.body.__sources.__sources).to.not.be.ok;
+                    expect(res.body.__sources.flags).to.be.ok;
+                    expect(res.body.__sources.name).to.be.ok;
                     expect(res.body.settings.__sources.languageId.fullIdentifier).to.equal('top');
                     expect(res.body.settings.__sources.languageId.revision).to.equal(1);
                     expect(res.body.settings.__sources.currencyId.fullIdentifier).to.equal('top.sub');
@@ -304,6 +349,21 @@ describe('configs', function() {
                 .end(done);
         });
 
+        it('retrieves a specific revision of a config (verify blueprint sources)', function(done) {
+            request.get('/configs/top/4?includeSources=true')
+                .expect(function(res) {
+                    expect(res.status).to.equal(200);
+                    expect(res.body.components.someComponentInheritingBlueprint.settings.__sources.name.fullIdentifier).to.equal('blueprints.someComponent');
+                    expect(res.body.components.someComponentInheritingBlueprint.components.subComponentInstance2).to.be.ok;
+                    expect(res.body.components.someComponentInheritingBlueprint.components.subComponentInstance2.settings.__sources.blueprintSetting.fullIdentifier).to.equal('blueprints.someComponent');
+                    expect(res.body.components.someComponentInheritingBlueprint.components.subComponentInstance2.settings.__sources.instanceSetting.fullIdentifier).to.equal('top.someComponentInheritingBlueprint');
+                    expect(res.body.components.someComponentInheritingBlueprint.components.subComponentInstance2.settings.blueprintSetting).to.equal(1);
+                    expect(res.body.components.someComponentInheritingBlueprint.components.subComponentInstance2.settings.instanceSetting).to.equal(2);
+                    expect(res.body.componentVersions.someComponent).to.equal(1);
+                })
+                .end(done);
+        });
+
         it('retrieves all top including children', function(done) {
             request.get('/configs/top?includeChildren=true')
                 .expect(function(res) {
@@ -313,6 +373,17 @@ describe('configs', function() {
                     expect(res.body[0].children[0].revision).to.equal(1);
                     expect(res.body[0].children[0].children[0].name).to.equal('Sub sub');
                     expect(res.body[0].children[0].children[0].revision).to.equal(3);
+                })
+                .end(done);
+        });
+
+        it('retrieves a specific revision of a config (verify component versions)', function(done) {
+            request.get('/configs/top/4?includeChildren=true')
+                .expect(function(res) {
+                    expect(res.status).to.equal(200);
+                    expect(res.body.componentVersions.topComponent).to.equal(1);
+                    expect(res.body.componentVersions.someComponent).to.equal(1);
+                    expect(res.body.componentVersions.subComponent).to.equal(1);
                 })
                 .end(done);
         });

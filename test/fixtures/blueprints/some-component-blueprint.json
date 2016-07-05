@@ -1,0 +1,17 @@
+{
+    "type": "someComponent",
+    "version": 1,
+    "fullIdentifier": "blueprints.someComponent",
+    "settings": {
+        "name": "Name from blueprint"
+    },
+    "components": {
+        "subComponentInstance2": {
+            "type": "subComponent",
+            "version": 1,
+            "settings": {
+                "blueprintSetting": 1
+            }
+        }
+    }
+}
